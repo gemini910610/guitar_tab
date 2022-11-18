@@ -63,7 +63,9 @@ class Tab:
         for section_num in range(len(self.data)):
             for i in range(6):
                 line[i] += '-'
-            top += f'{section_num + 1} '
+            top += f'{section_num + 1}'
+            if section_num + 1 < 10:
+                top += ' '
             section = self.get_section(section_num)
             for node_num in range(len(section)):
                 node = section[node_num]
@@ -83,14 +85,36 @@ class Tab:
                     top += ' ' * (length + 1)
             for i in range(6):
                 line[i] += '|'
+        top += ' '
         return [top, line]
 
     def print(self):
         os.system('cls')
         top, line = self.to_str()
-        print(top)
-        for i in range(6):
-            print(line[i])
+        ls = []
+        for l in line:
+            ls.append(l.split('|')[1:-1])
+        t = []
+        for l in ls[0]:
+            t.append(top[:len(l) + 1])
+            top = top[len(l) + 1:]
+        length = 0
+        result = ['', '|', '|', '|', '|', '|', '|']
+        for i in range(len(t)):
+            result[0] += t[i]
+            for j in range(6):
+                result[j+1] += ls[j][i] + '|'
+            length += len(t[i])
+            if length > 100:
+                for r in result:
+                    print(r)
+                print()
+                length = 0
+                result = ['', '|', '|', '|', '|', '|', '|']
+        if result != ['', '|', '|', '|', '|', '|', '|']:
+            for r in result:
+                print(r)
+            print()
         print(f'+ {self.current_character}')
 
     def save(self):
@@ -104,30 +128,35 @@ class Tab:
 
 
 def convert_to_node(input_num):
-    return [
-        [4, 3],
-        [3, 0],
-        [3, 2],
-        [3, 3],
-        [2, 0],
-        [2, 2],
-        [1, 0],
-        [1, 1],
-        [1, 3],
-        [0, 0],
-        [0, 1],
-        [0, 3],
-        [0, 5],
-        [0, 7],
-        [0, 8],
-        [0, 10],
-        [0, 12],
-        [0, 13],
-        [0, 15],
-        [0, 17],
-        [0, 19],
-        [0, 20],
-    ][input_num - 1]
+    return {
+        -5: [5, 0],
+        -4: [5, 1],
+        -3: [5, 3],
+        -2: [4, 0],
+        -1: [4, 2],
+        0: [4, 3],
+        1: [3, 0],
+        2: [3, 2],
+        3: [3, 3],
+        4: [2, 0],
+        5: [2, 2],
+        6: [1, 0],
+        7: [1, 1],
+        8: [1, 3],
+        9: [0, 0],
+        10: [0, 1],
+        11: [0, 3],
+        12: [0, 5],
+        13: [0, 7],
+        14: [0, 8],
+        15: [0, 10],
+        16: [0, 12],
+        17: [0, 13],
+        18: [0, 15],
+        19: [0, 17],
+        20: [0, 19],
+        21: [0, 20],
+    }[input_num]
 
 
 tab = Tab()
@@ -136,7 +165,7 @@ tab.print()
 while True:
     if msvcrt.kbhit():
         character = msvcrt.getch()
-        if character == b'\x00':
+        if character == b'\x00' or character == b'\xe0':
             character = msvcrt.getch()
             match character:
                 case b'M':  # right
@@ -196,11 +225,18 @@ while True:
                 tab.get_node()[line] = str(number)
                 tab.current_character = ''
             else:
-                if tab.get_node() == ['', '', '', '', '', ''] and tab.current_node == tab.get_node_count() - 1 and tab.get_node_count() != 1:
+                if (
+                    tab.get_node() == ['', '', '', '', '', '']
+                    and tab.current_node == tab.get_node_count() - 1
+                    and tab.get_node_count() != 1
+                ):
                     tab.remove_node()
                 tab.current_node = 0
                 tab.insert_section_after()
                 tab.current_section += 1
-        elif b'0' <= character <= b'9':
+        elif b'0' <= character <= b'9' or character == b'-':
             tab.current_character += character.decode('utf-8')
+        else:
+            print(character)
+            os.system('pause')
         tab.print()
