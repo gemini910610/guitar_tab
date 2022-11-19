@@ -11,6 +11,7 @@ class Tab:
         self.current_section = 0
         self.current_node = 0
         self.current_character = ''
+        self.history = ''
 
     def get_section(self, section_index=None):
         if section_index is None:
@@ -62,7 +63,7 @@ class Tab:
         line = ['|', '|', '|', '|', '|', '|']
         for section_num in range(len(self.data)):
             for i in range(6):
-                line[i] += '─'
+                line[i] += ('─' if mode != 'output' else '-')
             if section_num + 1 < 100:
                 top += f'{section_num + 1}'
             else:
@@ -78,10 +79,11 @@ class Tab:
                 for i in range(6):
                     if node[i] != '':
                         line[i] += node[i]
-                    line[i] += '─' * (length - len(node[i]) + 1)
+                    line[i] += ('─' if mode != 'output' else '-') * (length - len(node[i]) + 1)
                 if (
                     section_num == self.current_section
                     and node_num == self.current_node
+                    and mode != 'output'
                 ):
                     top += 'v' + ' ' * length
                 else:
@@ -101,7 +103,7 @@ class Tab:
             t.append(top[:len(l) + 1])
             top = top[len(l) + 1:]
         length = 0
-        result = ['', '┌', '├', '├', '├', '├', '└']
+        result = (['', '┌', '├', '├', '├', '├', '└'] if mode != 'output' else [' ', ' +', ' |', ' |', ' |', ' |', ' +'])
         output = ''
         for i in range(len(t)):
             result[0] += t[i]
@@ -110,36 +112,38 @@ class Tab:
             length += len(t[i])
             if length > 100:
                 output += f'{result[0]}\n'
-                output += f'{result[1]}┐\n'
-                output += f'{result[2]}┤\n'
-                output += f'{result[3]}┤\n'
-                output += f'{result[4]}┤\n'
-                output += f'{result[5]}┤\n'
-                output += f'{result[6]}┘\n'
+                output += f'{result[1]}' + ('┐' if mode != 'output' else '+') + '\n'
+                output += f'{result[2]}' + ('┤' if mode != 'output' else '|') + '\n'
+                output += f'{result[3]}' + ('┤' if mode != 'output' else '|') + '\n'
+                output += f'{result[4]}' + ('┤' if mode != 'output' else '|') + '\n'
+                output += f'{result[5]}' + ('┤' if mode != 'output' else '|') + '\n'
+                output += f'{result[6]}' + ('┘' if mode != 'output' else '+') + '\n'
                 output += '\n'
                 length = 0
-                result = ['', '┌', '├', '├', '├', '├', '└']
+                result = (['', '┌', '├', '├', '├', '├', '└'] if mode != 'output' else [' ', ' +', ' |', ' |', ' |', ' |', ' +'])
             elif i != len(t) - 1:
-                result[1] += '┬'
-                result[2] += '┼'
-                result[3] += '┼'
-                result[4] += '┼'
-                result[5] += '┼'
-                result[6] += '┴'
-        if result != ['', '┌', '├', '├', '├', '├', '└']:
+                result[1] += ('┬' if mode != 'output' else '+')
+                result[2] += ('┼' if mode != 'output' else '|')
+                result[3] += ('┼' if mode != 'output' else '|')
+                result[4] += ('┼' if mode != 'output' else '|')
+                result[5] += ('┼' if mode != 'output' else '|')
+                result[6] += ('┴' if mode != 'output' else '+')
+        if result != (['', '┌', '├', '├', '├', '├', '└'] if mode != 'output' else [' ', ' +', ' |', ' |', ' |', ' |', ' +']):
             output += f'{result[0]}\n'
-            output += f'{result[1]}╖\n'
-            output += f'{result[2]}╢\n'
-            output += f'{result[3]}╢\n'
-            output += f'{result[4]}╢\n'
-            output += f'{result[5]}╢\n'
-            output += f'{result[6]}╜\n'
+            output += f'{result[1]}' + ('╖' if mode != 'output' else '+') + '\n'
+            output += f'{result[2]}' + ('╢' if mode != 'output' else '|') + '\n'
+            output += f'{result[3]}' + ('╢' if mode != 'output' else '|') + '\n'
+            output += f'{result[4]}' + ('╢' if mode != 'output' else '|') + '\n'
+            output += f'{result[5]}' + ('╢' if mode != 'output' else '|') + '\n'
+            output += f'{result[6]}' + ('╜' if mode != 'output' else '+') + '\n'
             output += '\n'
         return output
 
-    def print(self):
+    def print(self, refresh = True):
         os.system('cls')
-        print(self.output(), end='')
+        if refresh:
+            self.history = self.output()
+        print(self.history, end='')
         print(f'+ {self.current_character}')
 
     def save(self):
@@ -189,6 +193,8 @@ tab.print()
 
 while True:
     if msvcrt.kbhit():
+        refresh = True
+        message = ''
         character = msvcrt.getch()
         if character == b'\x00' or character == b'\xe0':
             character = msvcrt.getch()
@@ -206,7 +212,7 @@ while True:
                         tab.current_section -= 1
                         tab.current_node = tab.get_node_count() - 1
                 case b'S':  # delete
-                    tab.print()
+                    tab.print(False)
                     remove = input('> ')
                     if remove == '':
                         if not (
@@ -230,16 +236,21 @@ while True:
                 case b'R':  # insert
                     tab.insert_node_after(node_index=tab.current_node - 1)
         elif character == b'\x08':  # backspace
+            refresh = False
             if tab.current_character != b'':
                 tab.current_character = tab.current_character[:-1]
         elif character == b'\x1b':  # esc
             tab.current_section = tab.section_count - 1
             tab.current_node = tab.get_node_count() - 1
         elif character == b'\x13':  # Ctrl + S
+            refresh = False
             tab.save()
+            message = 'save as tab.json'
         elif character == b'\x0f': # Ctrl + O
+            refresh = False
             with open('tab.txt', 'w') as file:
-                file.write(tab.output())
+                file.write(tab.output('output'))
+            message = 'save as tab.txt'
         elif character == b' ':
             if tab.current_character != '':
                 line, number = convert_to_node(int(tab.current_character))
@@ -263,5 +274,8 @@ while True:
                 tab.insert_section_after()
                 tab.current_section += 1
         elif b'0' <= character <= b'9' or character == b'-':
+            refresh = False
             tab.current_character += character.decode('utf-8')
-        tab.print()
+        tab.print(refresh)
+        if message != '':
+            print(message)
