@@ -62,8 +62,11 @@ class Tab:
         line = ['|', '|', '|', '|', '|', '|']
         for section_num in range(len(self.data)):
             for i in range(6):
-                line[i] += '-'
-            top += f'{section_num + 1}'
+                line[i] += '─'
+            if section_num + 1 < 100:
+                top += f'{section_num + 1}'
+            else:
+                top += f'{section_num + 1 - 100 :>02}'
             if section_num + 1 < 10:
                 top += ' '
             section = self.get_section(section_num)
@@ -75,7 +78,7 @@ class Tab:
                 for i in range(6):
                     if node[i] != '':
                         line[i] += node[i]
-                    line[i] += '-' * (length - len(node[i]) + 1)
+                    line[i] += '─' * (length - len(node[i]) + 1)
                 if (
                     section_num == self.current_section
                     and node_num == self.current_node
@@ -99,21 +102,38 @@ class Tab:
             t.append(top[:len(l) + 1])
             top = top[len(l) + 1:]
         length = 0
-        result = ['', '|', '|', '|', '|', '|', '|']
+        result = ['', '┌', '├', '├', '├', '├', '└']
         for i in range(len(t)):
             result[0] += t[i]
             for j in range(6):
-                result[j+1] += ls[j][i] + '|'
+                result[j+1] += ls[j][i]
             length += len(t[i])
             if length > 100:
-                for r in result:
-                    print(r)
+                print(result[0])
+                print(result[1] + '┐')
+                print(result[2] + '┤')
+                print(result[3] + '┤')
+                print(result[4] + '┤')
+                print(result[5] + '┤')
+                print(result[6] + '┘')
                 print()
                 length = 0
-                result = ['', '|', '|', '|', '|', '|', '|']
-        if result != ['', '|', '|', '|', '|', '|', '|']:
-            for r in result:
-                print(r)
+                result = ['', '┌', '├', '├', '├', '├', '└']
+            elif i != len(t) - 1:
+                result[1] += '┬'
+                result[2] += '┼'
+                result[3] += '┼'
+                result[4] += '┼'
+                result[5] += '┼'
+                result[6] += '┴'
+        if result != ['', '┌', '├', '├', '├', '├', '└']:
+            print(result[0])
+            print(result[1] + '╖')
+            print(result[2] + '╢')
+            print(result[3] + '╢')
+            print(result[4] + '╢')
+            print(result[5] + '╢')
+            print(result[6] + '╜')
             print()
         print(f'+ {self.current_character}')
 
@@ -236,7 +256,4 @@ while True:
                 tab.current_section += 1
         elif b'0' <= character <= b'9' or character == b'-':
             tab.current_character += character.decode('utf-8')
-        else:
-            print(character)
-            os.system('pause')
         tab.print()
