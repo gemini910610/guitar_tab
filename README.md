@@ -20,3 +20,5 @@
 * 無輸入：刪除該格
 ## Ctrl + S
 儲存檔案為tab.json
+## Ctrl + O
+將資料格式化輸出到tab.txt
