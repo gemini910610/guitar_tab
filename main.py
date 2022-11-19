@@ -57,7 +57,7 @@ class Tab:
             section_index = self.current_section
         return len(self.data[section_index])
 
-    def to_str(self):
+    def to_str(self, mode = None):
         top = ''
         line = ['|', '|', '|', '|', '|', '|']
         for section_num in range(len(self.data)):
@@ -90,10 +90,9 @@ class Tab:
                 line[i] += '|'
         top += ' '
         return [top, line]
-
-    def print(self):
-        os.system('cls')
-        top, line = self.to_str()
+    
+    def output(self, mode = None):
+        top, line = self.to_str(mode)
         ls = []
         for l in line:
             ls.append(l.split('|')[1:-1])
@@ -103,20 +102,21 @@ class Tab:
             top = top[len(l) + 1:]
         length = 0
         result = ['', '┌', '├', '├', '├', '├', '└']
+        output = ''
         for i in range(len(t)):
             result[0] += t[i]
             for j in range(6):
                 result[j+1] += ls[j][i]
             length += len(t[i])
             if length > 100:
-                print(result[0])
-                print(result[1] + '┐')
-                print(result[2] + '┤')
-                print(result[3] + '┤')
-                print(result[4] + '┤')
-                print(result[5] + '┤')
-                print(result[6] + '┘')
-                print()
+                output += f'{result[0]}\n'
+                output += f'{result[1]}┐\n'
+                output += f'{result[2]}┤\n'
+                output += f'{result[3]}┤\n'
+                output += f'{result[4]}┤\n'
+                output += f'{result[5]}┤\n'
+                output += f'{result[6]}┘\n'
+                output += '\n'
                 length = 0
                 result = ['', '┌', '├', '├', '├', '├', '└']
             elif i != len(t) - 1:
@@ -127,14 +127,19 @@ class Tab:
                 result[5] += '┼'
                 result[6] += '┴'
         if result != ['', '┌', '├', '├', '├', '├', '└']:
-            print(result[0])
-            print(result[1] + '╖')
-            print(result[2] + '╢')
-            print(result[3] + '╢')
-            print(result[4] + '╢')
-            print(result[5] + '╢')
-            print(result[6] + '╜')
-            print()
+            output += f'{result[0]}\n'
+            output += f'{result[1]}╖\n'
+            output += f'{result[2]}╢\n'
+            output += f'{result[3]}╢\n'
+            output += f'{result[4]}╢\n'
+            output += f'{result[5]}╢\n'
+            output += f'{result[6]}╜\n'
+            output += '\n'
+        return output
+
+    def print(self):
+        os.system('cls')
+        print(self.output(), end='')
         print(f'+ {self.current_character}')
 
     def save(self):
@@ -232,6 +237,9 @@ while True:
             tab.current_node = tab.get_node_count() - 1
         elif character == b'\x13':  # Ctrl + S
             tab.save()
+        elif character == b'\x0f': # Ctrl + O
+            with open('tab.txt', 'w') as file:
+                file.write(tab.output())
         elif character == b' ':
             if tab.current_character != '':
                 line, number = convert_to_node(int(tab.current_character))
